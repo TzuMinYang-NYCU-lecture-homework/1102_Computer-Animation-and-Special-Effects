@@ -148,8 +148,12 @@ void Spheres::collide(Cloth* cloth) {
         Eigen::Vector4f ori_normal_velocity_b = ori_velocity_b.dot(normal_vector) * normal_vector;
         Eigen::Vector4f ori_tangent_velocity_b = ori_velocity_b - ori_normal_velocity_b;
 
-        if ((ori_normal_velocity_a - ori_normal_velocity_b).dot(normal_vector) < 0) // 若兩粒子有互相靠近，b指向a的速度和b指向a的距離向量內積小於零
+        Eigen::Vector4f ori_relative_velocity_ab = ori_normal_velocity_a - ori_normal_velocity_b; // ab的相對速度，b指向a的速度
+
+        if (ori_relative_velocity_ab.dot(normal_vector) < 0) // 若兩粒子有互相靠近，b指向a的速度和b指向a的距離向量內積小於零
         {
+            // 碰撞
+            // for a
             Eigen::Vector4f normal_velocity_after_collision_a =
                 (mass_a * ori_normal_velocity_a + mass_b * ori_normal_velocity_b +
                  mass_b * coefRestitution * (ori_normal_velocity_b - ori_normal_velocity_a)) /
@@ -157,12 +161,25 @@ void Spheres::collide(Cloth* cloth) {
 
             _particles.velocity(i) = ori_tangent_velocity_a + normal_velocity_after_collision_a;
 
+            // for b
             Eigen::Vector4f normal_velocity_after_collision_b =
                 (mass_a * ori_normal_velocity_a + mass_b * ori_normal_velocity_b +
                  mass_a * coefRestitution * (ori_normal_velocity_a - ori_normal_velocity_b)) /
                 (mass_a + mass_b);
 
             cloth->particles().velocity(j) = ori_tangent_velocity_b + normal_velocity_after_collision_b;
+
+            // 摩擦力
+            constexpr float coefFriction = 0.6f;
+            Eigen::Vector4f ori_relative_tangent_velocity_ab = ori_tangent_velocity_a - ori_tangent_velocity_b;
+
+            // for a
+            Eigen::Vector4f friction_force_a = -coefFriction * (-ori_relative_velocity_ab.dot(normal_vector)) * ori_relative_tangent_velocity_ab;
+            _particles.acceleration(i) += friction_force_a * _particles.inverseMass(i);
+
+            // for b
+            Eigen::Vector4f friction_force_b = -friction_force_a;
+            cloth->particles().velocity(j) += friction_force_b * cloth->particles().inverseMass(j);
         }
 
         /// 穿刺的correction，把他推回邊界
@@ -209,8 +226,12 @@ void Spheres::collide() {
         Eigen::Vector4f ori_normal_velocity_b = ori_velocity_b.dot(normal_vector) * normal_vector;
         Eigen::Vector4f ori_tangent_velocity_b = ori_velocity_b - ori_normal_velocity_b;
 
-        if ((ori_normal_velocity_a - ori_normal_velocity_b).dot(normal_vector) < 0) // 若兩粒子有互相靠近，b指向a的速度和b指向a的距離向量內積小於零
+        Eigen::Vector4f ori_relative_velocity_ab = ori_normal_velocity_a - ori_normal_velocity_b; // ab的相對速度，b指向a的速度
+
+        if (ori_relative_velocity_ab.dot(normal_vector) < 0) // 若兩粒子有互相靠近，b指向a的速度和b指向a的距離向量內積小於零
         {
+            // 碰撞
+            // for a
             Eigen::Vector4f normal_velocity_after_collision_a =
                 (mass_a * ori_normal_velocity_a + mass_b * ori_normal_velocity_b +
                     mass_b * coefRestitution * (ori_normal_velocity_b - ori_normal_velocity_a)) /
@@ -218,12 +239,25 @@ void Spheres::collide() {
 
             _particles.velocity(i) = ori_tangent_velocity_a + normal_velocity_after_collision_a;
 
+            // for b
             Eigen::Vector4f normal_velocity_after_collision_b =
                 (mass_a * ori_normal_velocity_a + mass_b * ori_normal_velocity_b +
                     mass_a * coefRestitution * (ori_normal_velocity_a - ori_normal_velocity_b)) /
                 (mass_a + mass_b);
 
             _particles.velocity(j) = ori_tangent_velocity_b + normal_velocity_after_collision_b;
+            
+            // 摩擦力
+            constexpr float coefFriction = 0.3f;
+            Eigen::Vector4f ori_relative_tangent_velocity_ab = ori_tangent_velocity_a - ori_tangent_velocity_b;
+
+            // for a
+            Eigen::Vector4f friction_force_a = -coefFriction * (-ori_relative_velocity_ab.dot(normal_vector)) * ori_relative_tangent_velocity_ab;
+            _particles.acceleration(i) += friction_force_a * _particles.inverseMass(i);
+
+            // for b
+            Eigen::Vector4f friction_force_b = -friction_force_a;
+            _particles.acceleration(j) += friction_force_b * _particles.inverseMass(j);
         }
 
         /// 穿刺的correction，把他推回邊界
