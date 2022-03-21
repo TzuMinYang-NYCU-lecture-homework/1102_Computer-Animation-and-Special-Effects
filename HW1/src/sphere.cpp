@@ -171,10 +171,11 @@ void Spheres::collide(Cloth* cloth) {
 
             // ¼¯À¿¤O
             constexpr float coefFriction = 0.6f;
-            Eigen::Vector4f ori_relative_tangent_velocity_ab = ori_tangent_velocity_a - ori_tangent_velocity_b;
+            Eigen::Vector4f tangent_vector = ((_particles.position(i) - cloth->particles().position(j)).normalized() - normal_vector).normalized();
 
             // for a
-            Eigen::Vector4f friction_force_a = -coefFriction * (-ori_relative_velocity_ab.dot(normal_vector)) * ori_relative_tangent_velocity_ab;
+            Eigen::Vector4f relative_normal_force_ab = _particles.acceleration(i).dot(normal_vector) * normal_vector * _particles.mass(i) - cloth->particles().acceleration(j).dot(normal_vector) * normal_vector * cloth->particles().mass(j);
+            Eigen::Vector4f friction_force_a = -coefFriction * (-relative_normal_force_ab.dot(normal_vector)) * tangent_vector;
             _particles.acceleration(i) += friction_force_a * _particles.inverseMass(i);
 
             // for b
@@ -249,10 +250,11 @@ void Spheres::collide() {
             
             // ¼¯À¿¤O
             constexpr float coefFriction = 0.3f;
-            Eigen::Vector4f ori_relative_tangent_velocity_ab = ori_tangent_velocity_a - ori_tangent_velocity_b;
+            Eigen::Vector4f tangent_vector = ((_particles.position(i) - _particles.position(j)).normalized() - normal_vector).normalized();
 
             // for a
-            Eigen::Vector4f friction_force_a = -coefFriction * (-ori_relative_velocity_ab.dot(normal_vector)) * ori_relative_tangent_velocity_ab;
+            Eigen::Vector4f relative_normal_force_ab = _particles.acceleration(i).dot(normal_vector) * normal_vector * _particles.mass(i) - _particles.acceleration(j).dot(normal_vector) * normal_vector * _particles.mass(j);
+            Eigen::Vector4f friction_force_a = -coefFriction * (-relative_normal_force_ab.dot(normal_vector)) * tangent_vector;
             _particles.acceleration(i) += friction_force_a * _particles.inverseMass(i);
 
             // for b

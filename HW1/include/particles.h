@@ -26,9 +26,25 @@ class Particles {
   const float* getAccelerationData() const { return _acceleration.data(); }
   const float* getMassData() const { return _mass.data(); }
 
+  // add by myself
+  Eigen::Ref<Eigen::Matrix4Xf> angular_velocity() { return _angular_velocity; }
+  Eigen::Ref<Eigen::Matrix4Xf> angular_acceleration() { return _angular_acceleration; }
+
+  Eigen::Ref<Eigen::Vector4f> angular_velocity(int i) { return _angular_velocity.col(i); }
+  Eigen::Ref<Eigen::Vector4f> angular_acceleration(int i) { return _angular_acceleration.col(i); }
+
+  const float* getAngularVelocityData() const { return _angular_velocity.data(); }
+  const float* getAngularAccelerationData() const { return _angular_acceleration.data(); }
+  // end of my code
+
  private:
   Eigen::Matrix4Xf _position;
   Eigen::Matrix4Xf _velocity;
   Eigen::Matrix4Xf _acceleration;
   std::vector<float> _mass;
+
+  // add by myself
+  Eigen::Matrix4Xf _angular_velocity;
+  Eigen::Matrix4Xf _angular_acceleration;
+  // end of my code
 };
